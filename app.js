@@ -7,6 +7,9 @@ import morgan from "morgan"
 //imports files
 import connectDB from "./config/db.js"
 import userRouter from "./routes/user.js"
+import adminRouter from "./routes/admin.js"
+import restaurantRouter from "./routes/restaurant.js"
+import employeeRouter from "./routes/employee.js"
 
 //Dotenv config
 dotenv.config()
@@ -21,7 +24,11 @@ app.use(express.json())
 app.use(cors())
 app.use(morgan('dev'))
 
-app.use('/api/auth',userRouter)
+app.use('/',userRouter)
+app.use('/admin',adminRouter)
+app.use('/restaurant',restaurantRouter)
+app.use('/employee',employeeRouter)
+
 //port
 const PORT = process.env.PORT
 
