@@ -4,7 +4,7 @@ import validator from "validator";
 
 import { genPass } from "../config/bcript.js";
 import { auth } from "../middlewares/auth.js";
-const {password} = genPass
+const {password, compairePass} = genPass
 const {genrateToken} = auth
 const { Schema, ObjectId } = mongoose;
 
@@ -47,7 +47,11 @@ UsersSchema.pre('save',async function(){
     const newPassword = await password(this.Password)
     this.Password = newPassword
 } )
-
+//compare password
+UsersSchema.methods.comparePassword = async function(password){
+  const isMatch = await compairePass(password,this.Password)
+  return isMatch;
+}
 //jwtToken
 UsersSchema.methods.creatJwt = async function(){
     const token = await genrateToken(this._id)
