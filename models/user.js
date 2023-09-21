@@ -30,7 +30,10 @@ const UsersSchema = new Schema({
     type: String
     },
   Address: [{
-     type: String,
+    street: {type:String},
+    city: {type:String},
+    state: {type:String},
+    postalCode: {type:String},
     }],
   Is_blocked: { 
     type: Boolean,
