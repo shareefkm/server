@@ -32,9 +32,18 @@ const RestarantSchema = new Schema({
   Place:{
     type:String
   },
-  Address: [{
-     type: String,
-    }],
+  Address: {
+    street: String,
+    city: String,
+    state: String,
+    postalCode: String
+    },
+  Rating:{
+    type:Number
+  },
+  website:{
+    type:String
+  },
   Is_blocked: { 
     type: Boolean,
     default:false 
