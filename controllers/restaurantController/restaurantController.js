@@ -28,7 +28,7 @@ export const restaurant = {
       }
     } catch (error) {
       console.log(error);
-      res.status(400).send({
+      res.status(500).send({
         success: false,
         message: "Error Registration",
         error,
@@ -43,16 +43,22 @@ export const restaurant = {
       if (restaurant) {
         const isMatch = await restaurant.comparePassword(Password);
         if (isMatch) {
-          if(restaurant.Is_blocked){
-            console.log("blocked");
-            res.status(200).send({
+          if(!restaurant.Is_verify){
+            console.log("not vrifyed");
+            res.status(401).send({
               success: false,
-              message: "Youre account is blocked",
+              message: "Youre account is not verifyed",
             });
-          }else{
+          }else if(restaurant.Is_blocked){
+              res.status(401).send({
+                success: false,
+                message: "Youre account is blocked",
+              });
+          }
+          else{
             restaurant.Password = undefined
             const token = await restaurant.creatJwt();
-            res.status(201).send({
+            res.status(200).send({
               success: true,
               message: "Login Success",
               restaurant,
@@ -60,24 +66,83 @@ export const restaurant = {
             });
           }
         } else {
-          res.status(200).send({
+          res.status(403).send({
             success: false,
             message: "Invalid Password",
           });
         }
       } else {
-        res.status(200).send({
+        res.status(403).send({
           success: false,
           message: "Invalid Email",
         });
       }
     } catch (error) {
         console.log(error);
-        res.status(400).send({
+        res.status(500).send({
         success: false,
         message: "Error Login",
         error,
       });
+    }
+  },
+  getResProfile: async(req,res)=>{
+    try {
+      const restId = req.query.id
+      const restData = await Restarant.findOne({_id:restId})
+      if(restData){
+        res.status(200).send({
+          success:true,
+          restData,
+        })
+      }else{
+        res.status(404).send({
+          success:false,
+          message:"Restaurant data Not found"
+        })
+      }
+    } catch (error) {
+      res.status(500).send({
+        success:false,
+        message:"Server error"
+      })
+    }
+  },
+  editProfile: async (req,res)=>{
+    try {
+      const {editData, address, image, restId} = req.body
+      const existRest = await Restarant.findOne()
+      if(existRest.Email === editData.Email || existRest.Mobile === editData.Mobile){
+        res.status(404).send({
+          success:false,
+          message:"Email or Phone Number all ready exist"
+        })
+      }else{
+      await Restarant.updateOne({_id:restId},{
+        $set:{
+          Address:address,
+          Name:editData.Name,
+          Mobile:editData.Mobile,
+          Email:editData.Email,
+          Image:image
+        }
+      }).then(()=>{
+        res.status(200).send({
+          success:true,
+          message:"Profile edited success"
+        })
+      }).catch((err)=>{
+        res.status(404).send({
+          success:false,
+          message:"Error editing"
+        })
+      })
+    }
+    } catch (error) {
+      res.status(500).send({
+        success:false,
+        message:"server error"
+      })
     }
   },
   
