@@ -4,7 +4,7 @@ import Users from "../../models/user.js";
 
 export const cart = {
   addToCart: async (req, res) => {
-    const { productId, userId } = req.body;
+    const { productId, userId, selectedVariant } = req.body;
     try {
       const product = await Product.findOne({ _id: productId });
       const userCart = await Cart.findOne({ user: userId });
@@ -13,13 +13,16 @@ export const cart = {
             (item) => item.productId == productId
           );
         if (proExist !== -1) {
+          const varExist = userCart.items.find(item => item.variant === selectedVariant.name);
+          if(varExist){
         await Cart.updateOne(
-            { user: userId, "items.productId": productId },
+            { user: userId, "items.productId": productId, "items.variant":selectedVariant.name },
             {
               $inc: {
                 "items.$.quantity": 1,
-                "items.$.price": product.price,
+                "items.$.price": selectedVariant.offerPrice,
               },
+              
             }
           );
           res.status(200).send({
@@ -27,13 +30,32 @@ export const cart = {
             message: "product added to cart",
           });
         }else{
+          await Cart.updateOne(
+            { user: userId },
+            {
+              $addToSet: {
+                "items": {
+                  productId: product._id,
+                  price: selectedVariant.offerPrice,
+                  variant: selectedVariant.name
+                },
+              },
+            }
+          );
+          res.status(200).send({
+            success: true,
+            message: "product added to cart",
+          });
+        }
+        }else{
             await Cart.updateOne(
                 { user: userId },
                 {
                   $addToSet: {
                     "items": {
                       productId: product._id,
-                      price: product.price,
+                      price: selectedVariant.offerPrice,
+                      variant: selectedVariant.name
                     },
                   },
                 }
@@ -49,7 +71,8 @@ export const cart = {
           items: [
             {
               productId: product._id,
-              price: product.price,
+              price: selectedVariant.offerPrice,
+              variant: selectedVariant.name
             },
           ],
         })
@@ -60,29 +83,33 @@ export const cart = {
         
       }
     } catch (error) {
+      console.log(error);
       res.status(500).send({
         success: false,
-        message: "Internal server error",
+        message: "Internal server error", 
       });
     }
   },
 
   changeQuantity: async(req,res)=>{
     try {
-      const {itemId, cartId, action} = req.body
+      const {itemId, cartId, action, variant} = req.body
       const product = await Product.findOne({ _id: itemId });
+      const vrIndx = product.variants.findIndex(
+        (item) => item.name == variant
+      );
       if(action.increment){
-        await Cart.updateOne({_id:cartId, "items.productId":itemId},{
+        await Cart.updateOne({_id:cartId, "items.productId":itemId, "items.variant":variant},{
           $inc: {
             "items.$.quantity": 1,
-            "items.$.price": product.price,
+            "items.$.price": product.variants[vrIndx].offerPrice,
           },
         })
       }else if(action.decrement){
-        await Cart.updateOne({_id:cartId, "items.productId":itemId},{
+        await Cart.updateOne({_id:cartId, "items.productId":itemId, "items.variant":variant},{
           $inc: {
             "items.$.quantity": -1,
-            "items.$.price": -product.price,
+            "items.$.price": -product.variants[vrIndx].offerPrice,
           },
         })
       }
@@ -91,6 +118,7 @@ export const cart = {
         message: "quantityChanged",
       });
     } catch (error) {
+      console.log(error);
       res.status(500).send({
         success: false,
         message: "Internal server error",
@@ -100,10 +128,11 @@ export const cart = {
 
   cancelCartItem:async(req,res)=>{
     try {
-      const {itemId, cartId} = req.body
+      const {itemId, cartId, variant} = req.body
+      console.log(req.body);
       await Cart.updateOne({_id:cartId},{
         $pull:{
-           items: { productId: itemId }
+           items: { productId: itemId, variant }
         }
       })
       res.status(200).send({

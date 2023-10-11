@@ -68,4 +68,24 @@ export const auth = {
         .json({ message: "Authentication failed: invalid Login..." });
     }
   },
+  employeetVerify: async (req, res, next) => {
+    let token = await req.headers.authorization;
+    try {
+      if (!token || !token.startsWith("Bearer "))
+        return res
+          .status(404)
+          .json({ message: "Authentication failed: Please Login..." });
+
+      token = token.split(" ")[1];
+
+      const verified = jwt.verify(token, process.env.JWT_SECRET);
+      req.employee = { employeeId: verified.id };
+      next();
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(404)
+        .json({ message: "Authentication failed: invalid Login..." });
+    }
+  },
 };

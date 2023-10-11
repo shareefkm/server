@@ -23,6 +23,17 @@ const orderSchema = mongoose.Schema({
         default: 1,
         required: true,
       },
+      variant:{
+        type: String
+      },
+      orderStatus: {
+        type:String,
+        default:"Pending"
+      },
+      employeeId:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Employee",
+      }
     },
   ],
   start_date: {
@@ -68,9 +79,6 @@ const orderSchema = mongoose.Schema({
   },
   paymentStatus: {
     type:String
-},
-orderStatus: {
-  type:String
 },
 },{
   timestamps: true

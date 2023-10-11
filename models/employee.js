@@ -40,6 +40,10 @@ const EmployeeSchema = new Schema(
       state: {type:String},
       postalCode: {type:String},
       },
+    ernings:{
+      type:Number,
+      default:0
+    },
     Is_blocked: {
       type: Boolean,
       default: false,
@@ -48,6 +52,9 @@ const EmployeeSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    rating:{
+      type:Number
+    }
   },
   { timestamps: true }
 );

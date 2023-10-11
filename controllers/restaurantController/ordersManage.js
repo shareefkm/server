@@ -14,8 +14,6 @@ export const manageOrders = {
         match: { restaurant_id: id },
       });
 
-      console.log("Orders:", orders);
-
       if (orders) {
         res.status(200).send({
           success: true,

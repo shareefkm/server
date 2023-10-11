@@ -7,20 +7,31 @@ const productSchema = new mongoose.Schema({
   },
   restaurant_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Restaurant'
+    ref: 'Restarant'
   },
   description: {
     type: String,
     required: true
   },
   category: {
-    type: String,
-    required: true
-  },
-  price: {
-    type: Number,
-    required: true
-  },
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category'
+},
+variants: [
+  {
+    name:{type: String},
+    price: {
+      type: Number,
+    },
+    offer: {
+      type: Number,
+      min: 0,
+      max: 100
+    },  
+    offerPrice: {type:Number}
+  }
+],
+  
   stock: {
     type: Boolean,
     default: true

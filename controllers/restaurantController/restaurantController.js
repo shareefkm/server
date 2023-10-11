@@ -102,6 +102,7 @@ export const restaurant = {
         })
       }
     } catch (error) {
+      console.log(error);
       res.status(500).send({
         success:false,
         message:"Server error"
@@ -111,19 +112,11 @@ export const restaurant = {
   editProfile: async (req,res)=>{
     try {
       const {editData, address, image, restId} = req.body
-      const existRest = await Restarant.findOne()
-      if(existRest.Email === editData.Email || existRest.Mobile === editData.Mobile){
-        res.status(404).send({
-          success:false,
-          message:"Email or Phone Number all ready exist"
-        })
-      }else{
       await Restarant.updateOne({_id:restId},{
         $set:{
           Address:address,
           Name:editData.Name,
           Mobile:editData.Mobile,
-          Email:editData.Email,
           Image:image
         }
       }).then(()=>{
@@ -137,8 +130,9 @@ export const restaurant = {
           message:"Error editing"
         })
       })
-    }
+    // }
     } catch (error) {
+      console.log(error);
       res.status(500).send({
         success:false,
         message:"server error"

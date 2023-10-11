@@ -1,5 +1,8 @@
 //imports files
 import Employee from "../../models/employee.js";
+import { genPass } from "../../config/bcript.js";
+
+const { password } = genPass
 
 export const employee = {
   //Employee Registration
@@ -84,6 +87,81 @@ export const employee = {
         message: "Error Login",
         error,
       });
+    }
+  },
+  getEmplProfile: async(req,res)=>{
+    try {
+      const _id = req.params.id
+      const profile = await Employee.findOne({_id})
+      if(profile){
+        res.status(200).send({
+          success:true,
+          profile
+        })
+      }else{
+        res.status(404).send({
+          success:false,
+          message:"Data not found"
+        })
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({
+        success:false,
+        message:"Server Error"
+      })
+    }
+  },
+  editEmplName: async(req,res)=>{
+    try {
+      const{ id, name} = req.body
+      await Employee.updateOne({_id:id},{$set:{
+        Name:name
+      }})
+      res.status(200).send({
+        success:true,
+        message:"Your Profile Name is changed success"
+      })
+    } catch (error) {
+      res.status(500).send({
+        success:false,
+        message:"Server Error"
+      })
+    }
+  },
+
+  editPassword: async(req,res)=>{
+    try {
+      const {oldPassword,newPassword, _id} = req.body
+      const employee = await Employee.findOne({_id})
+      const isMatch = await employee.comparePassword(oldPassword)
+      if(isMatch){
+        const newPass = await password(newPassword)
+          await Employee.updateOne({_id},{$set:{
+            Password:newPass
+          }}).then(()=>{
+            res.status(200).send({
+              success:true,
+              message:"Password changed success"
+            })
+          }).catch((err)=>{
+            res.status(404).send({
+              success:false,
+              message:"Something went wrong"
+            })
+          })
+      }else{
+        res.status(404).send({
+          success:false,
+          message:"password is not match"
+        })
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({
+        success:false,
+        message:"Server error"
+      })
     }
   }
 };

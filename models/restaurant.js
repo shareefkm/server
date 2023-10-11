@@ -38,9 +38,45 @@ const RestarantSchema = new Schema({
     state: String,
     postalCode: String
     },
-  Rating:{
-    type:Number
+  categories: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category'
+    }],
+  product:[{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product'
+  }],
+  reviews: [
+    {
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+      },
+      review: {
+        type: String,
+        maxlength: 500
+      }
+    },
+    { timestamps: true }
+  ],
+  rating: [
+    {
+      userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5,
+      default: 0
+    },
   },
+  { timestamps: true }
+  ],
+  
   website:{
     type:String
   },
@@ -52,6 +88,7 @@ const RestarantSchema = new Schema({
     type:Boolean,
     default:false
     },
+  
 },{timestamps:true}
 );
 //cnvrtPass
@@ -62,6 +99,7 @@ RestarantSchema.pre('save',async function(){
 //compare password
 RestarantSchema.methods.comparePassword = async function(password){
   const isMatch = await compairePass(password,this.Password)
+  
   return isMatch;
 }
 //jwtToken
