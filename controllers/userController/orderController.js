@@ -6,6 +6,7 @@ import Cart from "../../models/cart.js";
 import Orders from "../../models/order.js";
 import Restarant from "../../models/restaurant.js";
 import Users from "../../models/user.js";
+import Coupon from "../../models/Coupon.js";
 
 dotenv.config();
 const instance = new Razorpay({
@@ -14,6 +15,74 @@ const instance = new Razorpay({
 });
 
 export const orders = {
+  applyCoupon: async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const { couponCode, cartData } = req.body;
+
+      const coupon = await Coupon.findOne({ couponCode }).populate(
+        "usedByUsers"
+      );
+
+      if (!coupon) {
+        res.status(404).send({
+          success: false,
+          message: "Coupon not found",
+        });
+      } else {
+        const currentDate = new Date();
+        if (currentDate > coupon.expirationDate) {
+          res.status(404).send({
+            success: false,
+            message: "Coupon has expired",
+          });
+        } else if (
+          coupon.usedByUsers &&
+          coupon.usedByUsers.some((usedUserId) => usedUserId.equals(userId))
+        ) {
+          res.status(404).send({
+            success: false,
+            message: "Coupon has already been used by this user",
+          });
+        } else if (
+          coupon.usageLimit !== null &&
+          coupon.usedCount >= coupon.usageLimit
+        ) {
+          res.status(404).send({
+            success: false,
+            message: "Coupon usage limit reached",
+          });
+        } else {
+          const discountAmount =
+            (cartData.total * coupon.discountPercentage) / 100;
+          const grandTotal = cartData.total - discountAmount;
+          await Cart.updateOne(
+            { _id: cartData._id },
+            {
+              $set: {
+                discount: discountAmount,
+                grandTotal,
+              },
+              $push: {
+                usedByUsers: userId,
+              },
+            }
+          );
+          res.status(200).send({
+            success: true,
+            message: "Coupon Applied",
+          });
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({
+        success: false,
+        message: "Server error",
+      });
+    }
+  },
+
   order: async (req, res) => {
     try {
       const { payment, addressIndex, cartData } = req.body;
@@ -25,7 +94,7 @@ export const orders = {
           product: product.productId,
           quantity: product.quantity,
           price: product.price,
-          variant: product.variant
+          variant: product.variant,
         };
       });
       const restaurent = await Cart.find({ _id: cartData._id }).populate(
@@ -88,12 +157,17 @@ export const orders = {
             });
           }
         });
-      }else if(payment === "Wallet"){
-        if(user.Wallet >= cart.grandTotal){
-          const grandTotal = parseFloat(cart.grandTotal).toFixed(2)
-          await Users.updateOne({_id:cartData.user},{$inc:{
-            Wallet:-grandTotal
-          }})
+      } else if (payment === "Wallet") {
+        if (user.Wallet >= cart.grandTotal) {
+          const grandTotal = parseFloat(cart.grandTotal).toFixed(2);
+          await Users.updateOne(
+            { _id: cartData.user },
+            {
+              $inc: {
+                Wallet: -grandTotal,
+              },
+            }
+          );
           await Orders.create({
             userId: user._id,
             restaurantId: restaurantIds.flat(),
@@ -110,8 +184,7 @@ export const orders = {
             success: true,
             message: "order success",
           });
-          
-        }else{
+        } else {
           res.status(400).send({
             success: false,
             message: "Insufficiant Balnce",
@@ -122,14 +195,15 @@ export const orders = {
       console.log(error);
       res.status(500).send({
         success: false,
-        message: "server error", 
+        message: "server error",
       });
     }
   },
   verifyPayment: async (req, res) => {
     try {
-      const { cartData } = req.body
-      const { razorpay_order_id, razorpay_payment_id, razorpay_signature, } = req.body.response
+      const { cartData } = req.body;
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+        req.body.response;
       const sign = razorpay_order_id + "|" + razorpay_payment_id;
       const expecterSign = cripto
         .createHmac("sha256", process.env.KEY_SECRET)
@@ -181,28 +255,36 @@ export const orders = {
     }
   },
 
-  cancelOrder:async(req,res)=>{
+  cancelOrder: async (req, res) => {
     try {
-      const {itemId, orderId, userId} = req.body
-      const orderItem = await Orders.findOne({'item._id': itemId})
-      const orderStatus = orderItem.item.map((ele)=>{
-        return {orderStatus:ele.orderStatus, price:ele.price}
-      })
-      if(orderStatus[0].orderStatus !== "Delivered"){
-        await Orders.updateOne({_id:orderId},{
-          $pull:{
-             item: { _id: itemId }
+      const { itemId, orderId, userId } = req.body;
+      const orderItem = await Orders.findOne({ "item._id": itemId });
+      const orderStatus = orderItem.item.map((ele) => {
+        return { orderStatus: ele.orderStatus, price: ele.price };
+      });
+      if (orderStatus[0].orderStatus !== "Delivered") {
+        await Orders.updateOne(
+          { _id: orderId },
+          {
+            $pull: {
+              item: { _id: itemId },
+            },
           }
-        })
+        );
         res.status(200).send({
-          success:true,
-          message:"Item cancelled"
-        })
-        if(orderItem.paymentType !== "COD"){
-          const price = parseFloat(orderStatus[0].price).toFixed(2)
-          await Users.updateOne({_id:userId},{$inc:{
-            Wallet:price
-          }})
+          success: true,
+          message: "Item cancelled",
+        });
+        if (orderItem.paymentType !== "COD") {
+          const price = parseFloat(orderStatus[0].price).toFixed(2);
+          await Users.updateOne(
+            { _id: userId },
+            {
+              $inc: {
+                Wallet: price,
+              },
+            }
+          );
         }
       }
     } catch (error) {

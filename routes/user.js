@@ -11,6 +11,7 @@ const userRouter = express.Router();
 const restaurantRouter = express.Router()
 const {
   userRegister,
+  verifyMail,
   userLogin,
   getUserDetail,
   editAddress,
@@ -23,13 +24,14 @@ const {
 const { getRestaurants} =restaurants
 const { getProductData, searchProduct } = products
 const { addToCart, getcart, changeQuantity, cancelCartItem, cartTotal } = cart;
-const { order, verifyPayment, getOrders, cancelOrder, doRating, doReview } = orders
+const { applyCoupon, order, verifyPayment, getOrders, cancelOrder, doRating, doReview } = orders
 
 const { verifyToken } = auth;
 
 //routs
 userRouter.get('/getrestaurants', getRestaurants)
 userRouter.post("/register", userRegister);
+userRouter.get('/verify/:id', verifyMail);
 userRouter.post("/login", userLogin);
 userRouter.get("/profile", verifyToken, getUserDetail);
 userRouter.patch("/addaddress", verifyToken, addAddress);
@@ -48,6 +50,7 @@ userRouter.patch("/changequantity", verifyToken, changeQuantity);
 userRouter.patch("/updatetotal", verifyToken, cartTotal);
 userRouter.patch("/cancelcartitem", verifyToken, cancelCartItem);
 
+userRouter.post("/applaycoupon", verifyToken, applyCoupon);
 userRouter.post("/order", verifyToken, order);
 userRouter.post("/verifypayment", verifyToken, verifyPayment);
 userRouter.get("/getorders", verifyToken, getOrders);

@@ -1,8 +1,38 @@
+import nodeMailer from 'nodemailer'
+import dotenv from "dotenv";
+
 //imports files
 import Users from "../../models/user.js";
 import { genPass } from "../../config/bcript.js";
 
-const { password } = genPass
+const { password } = genPass;
+
+dotenv.config();
+
+//email verification
+const sendVerifyMail = async (name, email, user_id) => {
+  try {
+    const transporter = nodeMailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.USER_MAIL, 
+        pass: process.env.PASS, 
+      },
+    });
+    const mailOptions = {
+      from: 'Yummi',
+      to: email,
+      subject: 'For verification',
+      html: `<p>Hello ${name}, Please click <a href="http://localhost:4000/verify/${user_id}">here</a> to verify your email.</p>`,
+    };
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Verify email sent:', info.response);
+  } catch (error) {
+    console.error( error.message);
+  }
+};
 
 export const user = {
   //user registration
@@ -17,16 +47,25 @@ export const user = {
         });
       } else {
         const user = await Users.create({ Name, Email, Mobile, Password });
-        const token = await user.creatJwt();
-        res.status(201).send({
-          success: true,
-          message: "Registration Success",
-          user: {
-            Name: user.Name,
-            Email: user.Email,
-          },
-          token,
-        });
+        if(user){
+          const token = await user.creatJwt();
+          sendVerifyMail(Name,Email,user._id)
+          res.status(201).send({
+            success: true,
+            message: "Check Your Email and verify your account",
+            user: {
+              Name: user.Name,
+              Email: user.Email,
+            },
+            token,
+          });
+        }else{
+          res.status(400).send({
+            success: false,
+            message: "Something wend wrong",
+            error,
+          });
+        }
       }
     } catch (error) {
       console.log(error);
@@ -37,6 +76,34 @@ export const user = {
       });
     }
   },
+  
+  verifyMail: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateVerifyStatus = await Users.updateOne(
+        { _id: id },
+        { $set: { is_verified: true } }
+      );
+      if (updateVerifyStatus.modifiedCount === 1) {
+        res.status(200).send({
+          success: true,
+          message: 'Your email is verified',
+        });
+      } else {
+        res.status(404).send({
+          success: false,
+          message: 'User not found or already verified',
+        });
+      }
+    } catch (error) {
+      console.error('Error verifying email:', error.message);
+      res.status(500).send({
+        success: false,
+        message: 'Error verifying email',
+      });
+    }
+  },
+
   //userLogin
   userLogin: async (req, res) => {
     try {
@@ -81,6 +148,9 @@ export const user = {
       });
     }
   },
+
+  
+
   getUserDetail: async (req, res) => {
     try {
       const user = await Users.findById(req.query.id);
@@ -228,28 +298,32 @@ export const user = {
       });
     }
   },
-  
+
   editProfile: async (req, res) => {
     try {
-      const {id, name, email, mobile} = req.body
-      await Users.updateOne({_id:id},{
-        $set:{
-          Name:name,
-          Email:email,
-          Mobile:mobile
+      const { id, name, email, mobile } = req.body;
+      await Users.updateOne(
+        { _id: id },
+        {
+          $set: {
+            Name: name,
+            Email: email,
+            Mobile: mobile,
+          },
         }
-      }).then(()=>{
-        res.status(200).send({
-          success:true,
-          message:"Profile Updated success"
+      )
+        .then(() => {
+          res.status(200).send({
+            success: true,
+            message: "Profile Updated success",
+          });
         })
-      }).catch(()=>{
-        res.status(404).send({
-          success:false,
-          message:"Something went wrong"
-        })
-      })
-     
+        .catch(() => {
+          res.status(404).send({
+            success: false,
+            message: "Something went wrong",
+          });
+        });
     } catch (error) {
       res.status(500).send({
         success: false,
@@ -258,38 +332,45 @@ export const user = {
     }
   },
 
-  editPassword: async(req,res)=>{
+  editPassword: async (req, res) => {
     try {
-      const {oldPassword,newPassword, _id} = req.body
-      const user = await Users.findOne({_id})
-      const isMatch = await user.comparePassword(oldPassword)
-      if(isMatch){
-        const newPass = await password(newPassword)
-          await Users.updateOne({_id},{$set:{
-            Password:newPass
-          }}).then(()=>{
+      const { oldPassword, newPassword, _id } = req.body;
+      const user = await Users.findOne({ _id });
+      const isMatch = await user.comparePassword(oldPassword);
+      if (isMatch) {
+        const newPass = await password(newPassword);
+        await Users.updateOne(
+          { _id },
+          {
+            $set: {
+              Password: newPass,
+            },
+          }
+        )
+          .then(() => {
             res.status(200).send({
-              success:true,
-              message:"Password changed success"
-            })
-          }).catch((err)=>{
-            res.status(404).send({
-              success:false,
-              message:"Something went wrong"
-            })
+              success: true,
+              message: "Password changed success",
+            });
           })
-      }else{
+          .catch((err) => {
+            res.status(404).send({
+              success: false,
+              message: "Something went wrong",
+            });
+          });
+      } else {
         res.status(404).send({
-          success:false,
-          message:"password is not match"
-        })
+          success: false,
+          message: "password is not match",
+        });
       }
     } catch (error) {
       console.log(error);
       res.status(500).send({
-        success:false,
-        message:"Server error"
-      })
+        success: false,
+        message: "Server error",
+      });
     }
-  }
+  },
 };
