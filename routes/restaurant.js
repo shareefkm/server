@@ -6,15 +6,18 @@ import { categories } from "../controllers/restaurantController/categoryManageme
 import { auth } from "../middlewares/auth.js";
 //router object
 const restaurantRouter = express.Router()
-const { restaurantRegister, restaurantLogin, getResProfile, editProfile } = restaurant
+const { restaurantRegister, verifyMail, restaurantLogin,forgetPassword,restPassword, getResProfile, editProfile } = restaurant
 const { addProduct, getProduct, deleteProduct, getProductData, editProduct, getRestaurantProduct } = products
-const { addCategory, getCategories, searchCategory, editCategory, deleteCategory } = categories
+const { addCategory, getCategories, editCategory, deleteCategory } = categories
 const { viewOrders } = manageOrders
 
 const { restaurantVerify } = auth
 //routs
 restaurantRouter.post('/register',restaurantRegister)
+restaurantRouter.get('/verify/:id', verifyMail);
 restaurantRouter.post('/login',restaurantLogin)
+restaurantRouter.post("/forgetpassword", forgetPassword);
+restaurantRouter.patch("/resetpassword", restPassword);
 restaurantRouter.post('/addproduct',restaurantVerify,addProduct)
 restaurantRouter.get('/getproduct',getProduct)
 restaurantRouter.get('/getrestarantproduct',getRestaurantProduct)
@@ -25,7 +28,6 @@ restaurantRouter.get('/editproduct',restaurantVerify,getProductData)
 restaurantRouter.patch('/editproduct',restaurantVerify,editProduct)
 restaurantRouter.post('/addcategory',restaurantVerify,addCategory)
 restaurantRouter.get('/getcategory',restaurantVerify,getCategories)
-// restaurantRouter.get('/serchcategory',restaurantVerify,searchCategory)
 restaurantRouter.patch('/editcategory',restaurantVerify,editCategory)
 restaurantRouter.patch('/deletcategory',restaurantVerify,deleteCategory)
 

@@ -1,5 +1,10 @@
 //imports files
 import Restarant from "../../models/restaurant.js";
+import { genPass } from "../../config/bcript.js";
+import { configEmail } from "../../config/emailConfig.js";
+
+const { password } = genPass;
+const { sendVerifyMail, sendForgetPassword} = configEmail;
 export const restaurant = {
   //restaurant registration
   restaurantRegister: async (req, res) => {
@@ -15,17 +20,20 @@ export const restaurant = {
           });
       } else {
         const restaurant = await Restarant.create({ Name, Email, Mobile, Password, Place });
-        const token = await restaurant.creatJwt();
-        res.status(201).send({
-          success: true,
-          message: "Registration Success",
-          restaurant: {
-            Name: restaurant.Name,
-            Email: restaurant.Email,
-          },
-          token,
-        });
-      }
+        if(restaurant){
+          sendVerifyMail(Name, Email, restaurant._id);
+          const token = await restaurant.creatJwt();
+          res.status(201).send({
+            success: true,
+            message: "Registration Success",
+            restaurant: {
+              Name: restaurant.Name,
+              Email: restaurant.Email,
+            },
+            token,
+          });
+        }
+        }
     } catch (error) {
       console.log(error);
       res.status(500).send({
@@ -35,7 +43,35 @@ export const restaurant = {
       });
     }
   },
-  //userLogin
+
+  //account verification thrue the email
+  verifyMail: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateVerifyStatus = await Restarant.updateOne(
+        { _id: id },
+        { $set: { is_verified: true } }
+      );
+      if (updateVerifyStatus.modifiedCount === 1) {
+        res.status(200).send({
+          success: true,
+          message: "Your email is verified",
+        });
+      } else {
+        res.status(404).send({
+          success: false,
+          message: "Restaurant not found or already verified",
+        });
+      }
+    } catch (error) {
+      console.error("Error verifying email:", error.message);
+      res.status(500).send({
+        success: false,
+        message: "Error verifying email",
+      });
+    }
+  },
+  //restaurant Login
   restaurantLogin: async (req, res) => {
     try {
       const { Email, Password } = req.body;
@@ -83,6 +119,56 @@ export const restaurant = {
         success: false,
         message: "Error Login",
         error,
+      });
+    }
+  },
+
+  forgetPassword: async (req, res) => {
+    try {
+      const { email } = req.body;
+      const restaurant = await Restarant.findOne({ Email: email });
+      if (restaurant) {
+        sendForgetPassword(restaurant.Name, email, restaurant._id);
+        res.status(200).send({
+          success: true,
+          message: "Check your email",
+        });
+      } else {
+        res.status(404).send({
+          success: false,
+          message: "Invalid Email",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({
+        success: false,
+        message: "Server Error",
+      });
+    }
+  },
+  //reset forget password
+  restPassword: async (req, res) => {
+    try {
+      const { _id, newPassword } = req.body;
+      const newPass = await password(newPassword);
+      await Restarant.updateOne(
+        { _id },
+        {
+          $set: {
+            Password: newPass,
+          },
+        }
+      )
+      res.status(200).send({
+        success:true,
+        message:"New password created"
+      })
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({
+        success: false,
+        message: "Server error",
       });
     }
   },

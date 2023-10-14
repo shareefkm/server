@@ -13,6 +13,8 @@ const {
   userRegister,
   verifyMail,
   userLogin,
+  forgetPassword,
+  restPassword,
   getUserDetail,
   editAddress,
   addAddress,
@@ -33,6 +35,8 @@ userRouter.get('/getrestaurants', getRestaurants)
 userRouter.post("/register", userRegister);
 userRouter.get('/verify/:id', verifyMail);
 userRouter.post("/login", userLogin);
+userRouter.post("/forgetpassword", forgetPassword);
+userRouter.patch("/resetpassword", restPassword);
 userRouter.get("/profile", verifyToken, getUserDetail);
 userRouter.patch("/addaddress", verifyToken, addAddress);
 userRouter.patch("/editaddress", verifyToken, editAddress);

@@ -17,16 +17,19 @@ export const employee = {
         });
       }else{
         const employee = await Employee.create({Name, Email, Mobile, Password, address, id_Proof})
-        const token = await employee.creatJwt();
-        res.status(201).send({
-            success: true,
-            message: "Registration Success",
-            employee: {
-              Name: employee.Name,
-              Email: employee.Email,
-            },
-            token
-          });
+        if(employee){
+          sendVerifyMail(Name, Email, employee._id);
+          const token = await employee.creatJwt();
+          res.status(201).send({
+              success: true,
+              message: "Registration Success",
+              employee: {
+                Name: employee.Name,
+                Email: employee.Email,
+              },
+              token
+            });
+        }
       }
     } catch (error) {
         console.log(error);
@@ -34,6 +37,34 @@ export const employee = {
         success: false,
         message: "Error Registration",
         error,
+      });
+    }
+  },
+
+  //account verification thrue the email
+  verifyMail: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateVerifyStatus = await Employee.updateOne(
+        { _id: id },
+        { $set: { is_verified: true } }
+      );
+      if (updateVerifyStatus.modifiedCount === 1) {
+        res.status(200).send({
+          success: true,
+          message: "Your email is verified",
+        });
+      } else {
+        res.status(404).send({
+          success: false,
+          message: "User not found or already verified",
+        });
+      }
+    } catch (error) {
+      console.error("Error verifying email:", error.message);
+      res.status(500).send({
+        success: false,
+        message: "Error verifying email",
       });
     }
   },
@@ -127,6 +158,60 @@ export const employee = {
         success:false,
         message:"Server Error"
       })
+    }
+  },
+
+  //send forgetpassword link
+
+  forgetPassword: async (req, res) => {
+    try {
+      const { email } = req.body;
+      const employee = await Employee.findOne({ Email: email });
+      if (employee) {
+        sendForgetPassword(user.Name, email, employee._id);
+        res.status(200).send({
+          success: true,
+          message: "Check your email",
+        });
+      } else {
+        res.status(404).send({
+          success: false,
+          message: "Invalid Email",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({
+        success: false,
+        message: "Server Error",
+      });
+    }
+  },
+
+  //reset forget password
+
+  restPassword: async (req, res) => {
+    try {
+      const { _id, newPassword } = req.body;
+      const newPass = await password(newPassword);
+      await Employee.updateOne(
+        { _id },
+        {
+          $set: {
+            Password: newPass,
+          },
+        }
+      )
+        res.status(200).send({
+        success:true,
+        message:"New password created"
+      })
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({
+        success: false,
+        message: "Server error",
+      });
     }
   },
 

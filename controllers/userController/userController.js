@@ -1,38 +1,10 @@
-import nodeMailer from 'nodemailer'
-import dotenv from "dotenv";
-
 //imports files
 import Users from "../../models/user.js";
 import { genPass } from "../../config/bcript.js";
+import { configEmail } from "../../config/emailConfig.js";
 
 const { password } = genPass;
-
-dotenv.config();
-
-//email verification
-const sendVerifyMail = async (name, email, user_id) => {
-  try {
-    const transporter = nodeMailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.USER_MAIL, 
-        pass: process.env.PASS, 
-      },
-    });
-    const mailOptions = {
-      from: 'Yummi',
-      to: email,
-      subject: 'For verification',
-      html: `<p>Hello ${name}, Please click <a href="http://localhost:4000/verify/${user_id}">here</a> to verify your email.</p>`,
-    };
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Verify email sent:', info.response);
-  } catch (error) {
-    console.error( error.message);
-  }
-};
+const { sendVerifyMail, sendForgetPassword} = configEmail
 
 export const user = {
   //user registration
@@ -47,9 +19,9 @@ export const user = {
         });
       } else {
         const user = await Users.create({ Name, Email, Mobile, Password });
-        if(user){
+        if (user) {
           const token = await user.creatJwt();
-          sendVerifyMail(Name,Email,user._id)
+          sendVerifyMail(Name, Email, user._id);
           res.status(201).send({
             success: true,
             message: "Check Your Email and verify your account",
@@ -59,7 +31,7 @@ export const user = {
             },
             token,
           });
-        }else{
+        } else {
           res.status(400).send({
             success: false,
             message: "Something wend wrong",
@@ -76,7 +48,8 @@ export const user = {
       });
     }
   },
-  
+
+  //account verification thrue the email
   verifyMail: async (req, res) => {
     try {
       const { id } = req.params;
@@ -87,24 +60,25 @@ export const user = {
       if (updateVerifyStatus.modifiedCount === 1) {
         res.status(200).send({
           success: true,
-          message: 'Your email is verified',
+          message: "Your email is verified",
         });
       } else {
         res.status(404).send({
           success: false,
-          message: 'User not found or already verified',
+          message: "User not found or already verified",
         });
       }
     } catch (error) {
-      console.error('Error verifying email:', error.message);
+      console.error("Error verifying email:", error.message);
       res.status(500).send({
         success: false,
-        message: 'Error verifying email',
+        message: "Error verifying email",
       });
     }
   },
 
   //userLogin
+
   userLogin: async (req, res) => {
     try {
       const { Email, Password } = req.body;
@@ -112,19 +86,26 @@ export const user = {
       if (user) {
         const isMatch = await user.comparePassword(Password);
         if (isMatch) {
-          if (user.Is_blocked) {
+          if(user.is_verified){
+            if (user.Is_blocked) {
+              res.status(403).send({
+                success: false,
+                message: "Youre account is blocked",
+              });
+            } else {
+              user.Password = undefined;
+              const token = await user.creatJwt();
+              res.status(200).send({
+                success: true,
+                message: "Login Success",
+                user,
+                token,
+              });
+            }
+          }else{
             res.status(403).send({
               success: false,
-              message: "Youre account is blocked",
-            });
-          } else {
-            user.Password = undefined;
-            const token = await user.creatJwt();
-            res.status(200).send({
-              success: true,
-              message: "Login Success",
-              user,
-              token,
+              message: "Youre account not verified",
             });
           }
         } else {
@@ -149,7 +130,62 @@ export const user = {
     }
   },
 
-  
+  //send forgetpassword link
+
+  forgetPassword: async (req, res) => {
+    try {
+      const { email } = req.body;
+      const user = await Users.findOne({ Email: email });
+      if (user) {
+        sendForgetPassword(user.Name, email, user._id);
+        res.status(200).send({
+          success: true,
+          message: "Check your email",
+        });
+      } else {
+        res.status(404).send({
+          success: false,
+          message: "Invalid Email",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({
+        success: false,
+        message: "Server Error",
+      });
+    }
+  },
+
+  //reset forget password
+
+  restPassword: async (req, res) => {
+    try {
+      const { _id, newPassword } = req.body;
+      const newPass = await password(newPassword);
+      console.log(newPass);
+      await Users.updateOne(
+        { _id },
+        {
+          $set: {
+            Password: newPass,
+          },
+        }
+      )
+        res.status(200).send({
+        success:true,
+        message:"New password created"
+      })
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({
+        success: false,
+        message: "Server error",
+      });
+    }
+  },
+
+  //get user detail
 
   getUserDetail: async (req, res) => {
     try {

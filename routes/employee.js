@@ -6,13 +6,16 @@ import { auth } from "../middlewares/auth.js";
 
 //router object
 const employeeRouter = express.Router()
-const { employeeRegister, employeeLogin,getEmplProfile, editEmplName,editPassword } = employee
+const { employeeRegister, verifyMail, forgetPassword, restPassword, employeeLogin,getEmplProfile, editEmplName,editPassword } = employee
 const { getEmplOrders,updateDeliveryStatus} = ordersEmpl
 
 const { employeetVerify } = auth
 //routs
 employeeRouter.post('/register', employeeRegister)
+employeeRouter.get('/verify/:id', verifyMail);
 employeeRouter.post('/login', employeeLogin)
+employeeRouter.post("/forgetpassword", forgetPassword);
+employeeRouter.patch("/resetpassword", restPassword);
 employeeRouter.get('/getprofile/:id',employeetVerify, getEmplProfile)
 employeeRouter.get('/getordersempl',employeetVerify, getEmplOrders)
 employeeRouter.patch('/updatedelivery',employeetVerify, updateDeliveryStatus)
