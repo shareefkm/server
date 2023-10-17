@@ -18,7 +18,7 @@ export const employee = {
       }else{
         const employee = await Employee.create({Name, Email, Mobile, Password, address, id_Proof})
         if(employee){
-          sendVerifyMail(Name, Email, employee._id);
+          sendVerifyMail(Name, Email, employee._id, "employee/verify");
           const token = await employee.creatJwt();
           res.status(201).send({
               success: true,
@@ -168,7 +168,7 @@ export const employee = {
       const { email } = req.body;
       const employee = await Employee.findOne({ Email: email });
       if (employee) {
-        sendForgetPassword(user.Name, email, employee._id);
+        sendForgetPassword(user.Name, email, employee._id, "employee/resetpassword");
         res.status(200).send({
           success: true,
           message: "Check your email",

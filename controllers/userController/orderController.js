@@ -354,4 +354,21 @@ export const orders = {
       });
     }
   },
+  getOrderItems: async(req,res)=>{
+    try {
+      const { id } = req.query
+      const orderItems = await Orders.findOne({_id:id}) .sort({ _id: -1 })
+      .populate("item.product");
+      res.status(200).send({
+        success:true,
+        orderItems
+      })
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({
+        success: false,
+        message: "Server error.",
+      })
+    }
+  }
 };

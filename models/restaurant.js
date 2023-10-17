@@ -32,6 +32,12 @@ const RestarantSchema = new Schema({
   Place:{
     type:String
   },
+  longitude:{
+    type:Number
+  },
+   latitude:{
+    type:Number
+  },
   Address: {
     street: String,
     city: String,

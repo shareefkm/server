@@ -21,7 +21,7 @@ export const user = {
         const user = await Users.create({ Name, Email, Mobile, Password });
         if (user) {
           const token = await user.creatJwt();
-          sendVerifyMail(Name, Email, user._id);
+          sendVerifyMail(Name, Email, user._id, "verify");
           res.status(201).send({
             success: true,
             message: "Check Your Email and verify your account",

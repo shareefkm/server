@@ -9,7 +9,7 @@ export const restaurant = {
   //restaurant registration
   restaurantRegister: async (req, res) => {
     try {
-      const { Name, Email, Mobile, Password,Place } = req.body;
+      const { Name, Email, Mobile, Password, Place, longitude, latitude } = req.body;
       const existingRest = await Restarant.findOne({ $or:[{Email},{Name}]});
       if (existingRest) {
         return res
@@ -19,9 +19,9 @@ export const restaurant = {
             message: "Email Already Exist Please Login",
           });
       } else {
-        const restaurant = await Restarant.create({ Name, Email, Mobile, Password, Place });
+        const restaurant = await Restarant.create({ Name, Email, Mobile, Password, Place, longitude, latitude });
         if(restaurant){
-          sendVerifyMail(Name, Email, restaurant._id);
+          sendVerifyMail(Name, Email, restaurant._id, "restaurant/verify");
           const token = await restaurant.creatJwt();
           res.status(201).send({
             success: true,
@@ -46,12 +46,15 @@ export const restaurant = {
 
   //account verification thrue the email
   verifyMail: async (req, res) => {
+    console.log("sdfghjkl;");
     try {
       const { id } = req.params;
+      console.log(req.params);
       const updateVerifyStatus = await Restarant.updateOne(
         { _id: id },
-        { $set: { is_verified: true } }
+        { $set: { Is_verify: true } }
       );
+      console.log(updateVerifyStatus);
       if (updateVerifyStatus.modifiedCount === 1) {
         res.status(200).send({
           success: true,
@@ -128,7 +131,7 @@ export const restaurant = {
       const { email } = req.body;
       const restaurant = await Restarant.findOne({ Email: email });
       if (restaurant) {
-        sendForgetPassword(restaurant.Name, email, restaurant._id);
+        sendForgetPassword(restaurant.Name, email, restaurant._id, "restaurant/resetpassword");
         res.status(200).send({
           success: true,
           message: "Check your email",

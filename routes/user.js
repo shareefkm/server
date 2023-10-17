@@ -26,7 +26,7 @@ const {
 const { getRestaurants} =restaurants
 const { getProductData, searchProduct } = products
 const { addToCart, getcart, changeQuantity, cancelCartItem, cartTotal } = cart;
-const { applyCoupon, order, verifyPayment, getOrders, cancelOrder, doRating, doReview } = orders
+const { applyCoupon, order, verifyPayment, getOrders, getOrderItems, cancelOrder, doRating, doReview } = orders
 
 const { verifyToken } = auth;
 
@@ -58,6 +58,7 @@ userRouter.post("/applaycoupon", verifyToken, applyCoupon);
 userRouter.post("/order", verifyToken, order);
 userRouter.post("/verifypayment", verifyToken, verifyPayment);
 userRouter.get("/getorders", verifyToken, getOrders);
+userRouter.get("/getorderitems", verifyToken, getOrderItems);
 userRouter.patch("/cancelorder", verifyToken, cancelOrder);
 userRouter.patch("/rating", verifyToken, doRating);
 userRouter.patch("/review", verifyToken, doReview);
