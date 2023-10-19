@@ -3,11 +3,13 @@ import  express  from "express";
 import { employee } from "../controllers/employeeController/employeeController.js"
 import { ordersEmpl } from "../controllers/employeeController/orderControllEmpl.js";
 import { auth } from "../middlewares/auth.js";
+import { chats } from "../controllers/chatController/chatControll.js";
 
 //router object
 const employeeRouter = express.Router()
 const { employeeRegister, verifyMail, forgetPassword, restPassword, employeeLogin,getEmplProfile, editEmplName,editPassword } = employee
 const { getEmplOrders,updateDeliveryStatus} = ordersEmpl
+const { createChat, fetchChats, sendMessage, allMessages } = chats
 
 const { employeetVerify } = auth
 //routs
@@ -21,5 +23,9 @@ employeeRouter.get('/getordersempl',employeetVerify, getEmplOrders)
 employeeRouter.patch('/updatedelivery',employeetVerify, updateDeliveryStatus)
 employeeRouter.patch('/editprofile',employeetVerify, editEmplName)
 employeeRouter.patch('/editpassword',employeetVerify, editPassword)
+employeeRouter.post('/chat',employeetVerify, createChat)
+employeeRouter.get('/chat',employeetVerify, fetchChats)
+employeeRouter.post('/sendmessage',employeetVerify, sendMessage )
+employeeRouter.get('/openchat',employeetVerify, allMessages )
 
 export default employeeRouter

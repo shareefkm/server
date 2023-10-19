@@ -4,7 +4,8 @@ import { restaurants } from "../controllers/userController/restaurants.js";
 import { products } from "../controllers/restaurantController/productController.js";
 import { cart } from "../controllers/userController/cartController.js";
 import { auth } from "../middlewares/auth.js";
-import { orders } from "../controllers/userController/orderController.js";
+import { orderControl } from "../controllers/userController/orderController.js";
+import { chats } from "../controllers/chatController/chatControll.js";
 
 //router object
 const userRouter = express.Router();
@@ -26,7 +27,8 @@ const {
 const { getRestaurants} =restaurants
 const { getProductData, searchProduct } = products
 const { addToCart, getcart, changeQuantity, cancelCartItem, cartTotal } = cart;
-const { applyCoupon, order, verifyPayment, getOrders, getOrderItems, cancelOrder, doRating, doReview } = orders
+const { applyCoupon, order, verifyPayment, getOrders, getOrderItems, cancelOrder, doRating, doReview } = orderControl
+const { createChat, fetchChats, sendMessage, allMessages } = chats
 
 const { verifyToken } = auth;
 
@@ -62,5 +64,8 @@ userRouter.get("/getorderitems", verifyToken, getOrderItems);
 userRouter.patch("/cancelorder", verifyToken, cancelOrder);
 userRouter.patch("/rating", verifyToken, doRating);
 userRouter.patch("/review", verifyToken, doReview);
+userRouter.get('/chat',verifyToken, fetchChats)
+userRouter.post('/sendmessage',verifyToken, sendMessage )
+userRouter.get('/openchat',verifyToken, allMessages )
 
 export default userRouter;

@@ -8,7 +8,7 @@ export const manageOrders = {
         "item.product": {
           $in: await Product.find({ restaurant_id: id }).select("_id"),
         },
-      }).populate({
+      }).sort({ _id: -1 }).populate({
         path: "item.product",
         model: "Product",
         match: { restaurant_id: id },

@@ -7,6 +7,7 @@ import Orders from "../../models/order.js";
 import Restarant from "../../models/restaurant.js";
 import Users from "../../models/user.js";
 import Coupon from "../../models/Coupon.js";
+import Product from "../../models/product.js";
 
 dotenv.config();
 const instance = new Razorpay({
@@ -14,7 +15,7 @@ const instance = new Razorpay({
   key_secret: process.env.KEY_SECRET,
 });
 
-export const orders = {
+export const orderControl = {
   applyCoupon: async (req, res) => {
     try {
       const userId = req.user.userId;
@@ -23,7 +24,6 @@ export const orders = {
       const coupon = await Coupon.findOne({ couponCode }).populate(
         "usedByUsers"
       );
-
       if (!coupon) {
         res.status(404).send({
           success: false,
@@ -86,28 +86,64 @@ export const orders = {
   order: async (req, res) => {
     try {
       const { payment, addressIndex, cartData } = req.body;
-      const cart = await Cart.findOne({ _id: cartData._id });
+      // const cart = await Cart.findOne({ _id: cartData._id });
       const user = await Users.findOne({ _id: cartData.user });
       const address = user.Address[addressIndex];
-      const items = cart.items.map((product) => {
-        return {
-          product: product.productId,
-          quantity: product.quantity,
-          price: product.price,
-          variant: product.variant,
-        };
-      });
-      const restaurent = await Cart.find({ _id: cartData._id }).populate(
-        "items.productId"
-      );
-      const restaurantIds = restaurent.map((data) => {
-        const updatedItems = data.items.map((item) => {
-          const restaurantId = item.productId.restaurant_id;
-          return restaurantId;
-        });
-        return updatedItems;
-      });
+      const cart = await Cart.findOne({ _id: cartData._id })
+        .populate("items.productId");
+      const items = cart.items.map((item) => ({
+        product: item.productId,
+        quantity: item.quantity,
+        price: item.price,
+        variant: item.variant,
+      }));
 
+      const restaurantIds = cart.items.map(
+        (item) => item.productId.restaurant_id
+      );
+
+
+      // const items = cart.items.map((product) => {
+      //   return {
+      //     product: product.productId,
+      //     quantity: product.quantity,
+      //     price: product.price,
+      //     variant: product.variant,
+      //   };
+      // });
+      // const restaurent = await Cart.find({ _id: cartData._id }).populate(
+      //   "items.productId"
+      // );
+      // const restaurantIds = restaurent.map((data) => {
+      //   const updatedItems = data.items.map((item) => {
+      //     const restaurantId = item.productId.restaurant_id;
+      //     return restaurantId;
+      //   });
+      //   return updatedItems;
+      // });
+
+      // const cart = await Cart.aggregate([
+      //   { $match: { _id: cartData._id } },
+      //   { $unwind: '$items' },
+      //   {
+      //     $project: {
+      //       product: '$items.productId',
+      //       quantity: '$items.quantity',
+      //       price: '$items.price',
+      //       variant: '$items.variant'
+      //     }
+      //   }
+      // ]);
+      
+      // const items = cart.map(item => ({
+      //   product: item.product,
+      //   quantity: item.quantity,
+      //   price: item.price,
+      //   variant: item.variant
+      // }));
+      
+      // const restaurantIds = cart.map(item => item.product.restaurant_id);
+      
       const paymentStatus = payment === "COD" ? "Pending" : "Paid";
       if (payment === "COD") {
         await Orders.create({
@@ -158,6 +194,7 @@ export const orders = {
           }
         });
       } else if (payment === "Wallet") {
+        console.log(user.Wallet,"----", cart.grandTotal );
         if (user.Wallet >= cart.grandTotal) {
           const grandTotal = parseFloat(cart.grandTotal).toFixed(2);
           await Users.updateOne(
@@ -255,45 +292,115 @@ export const orders = {
     }
   },
 
+  // cancelOrder: async (req, res) => {
+  //   try {
+  //     const { itemId, orderId, userId } = req.body;
+  //     const orderItem = await Orders.findOne({ "item._id": itemId });
+  //     const orderStatus = orderItem.item.map((ele) => {
+  //       return { orderStatus: ele.orderStatus, price: ele.price };
+  //     });
+  //     console.log("order ====> ", orderStatus);
+  //     if (orderStatus[0].orderStatus !== "Delivered") {
+  //       await Orders.updateOne(
+  //         { _id: orderId },
+  //         {
+  //           $pull: {
+  //             item: { _id: itemId },
+  //           },
+  //         }
+  //       );
+  //       res.status(200).send({
+  //         success: true,
+  //         message: "Item cancelled",
+  //       });
+  //       if (orderItem.paymentType !== "COD") {
+  //         const price = parseFloat(orderStatus[0].price).toFixed(2);
+  //         await Users.updateOne(
+  //           { _id: userId },
+  //           {
+  //             $inc: {
+  //               Wallet: price,
+  //             },
+  //           }
+  //         );
+  //       }
+  //     }
+  //   } catch (error) {
+  //     res.status(500).send({
+  //       success: false,
+  //       message: "Internal server error",
+  //     });
+  //   }
+  // },
+
   cancelOrder: async (req, res) => {
     try {
       const { itemId, orderId, userId } = req.body;
       const orderItem = await Orders.findOne({ "item._id": itemId });
-      const orderStatus = orderItem.item.map((ele) => {
-        return { orderStatus: ele.orderStatus, price: ele.price };
-      });
-      if (orderStatus[0].orderStatus !== "Delivered") {
-        await Orders.updateOne(
-          { _id: orderId },
-          {
-            $pull: {
-              item: { _id: itemId },
-            },
-          }
-        );
-        res.status(200).send({
-          success: true,
-          message: "Item cancelled",
-        });
-        if (orderItem.paymentType !== "COD") {
-          const price = parseFloat(orderStatus[0].price).toFixed(2);
-          await Users.updateOne(
-            { _id: userId },
+  
+      if (orderItem) {
+        const canceledItemIndex = orderItem.item.findIndex(item => item._id.toString() === itemId);
+  
+        if (canceledItemIndex !== -1 && orderItem.item[canceledItemIndex].orderStatus !== "Delivered") {
+          const canceledItem = orderItem.item[canceledItemIndex];
+          const canceledProductPrice = canceledItem.price * canceledItem.quantity;
+          const canceledProductDiscount = canceledProductPrice * (canceledItem.discount || 0);
+          const updatedTotalPrice = orderItem.totalPrice - canceledProductPrice;
+          const updatedDiscount = orderItem.discount - canceledProductDiscount;
+          const updatedGrandTotal = updatedTotalPrice - updatedDiscount;
+          const product = await Product.findById(canceledItem.product);
+          const restaurantIdToRemove = product ? product.restaurant_id : null;
+          
+          console.log(restaurantIdToRemove);
+          // Update order details to cancel the item and remove restaurantId
+          await Orders.updateOne(
+            { _id: orderId },
             {
-              $inc: {
-                Wallet: price,
+              $pull: { item: { _id: itemId },
+              restaurantId: restaurantIdToRemove },
+              $set: {
+                totalPrice: updatedTotalPrice,
+                discount: updatedDiscount,
+                grandTotal: updatedGrandTotal
               },
             }
           );
+  
+          res.status(200).send({
+            success: true,
+            message: "Item cancelled",
+          });
+  
+          if (orderItem.paymentType !== "COD") {
+            const formattedPrice = parseFloat(canceledProductPrice).toFixed(2);
+            await Users.updateOne(
+              { _id: userId },
+              {
+                $inc: { Wallet: parseFloat(formattedPrice) }
+              }
+            );
+          }
+        } else {
+          res.status(400).send({
+            success: false,
+            message: "Item not found or cannot be cancelled.",
+          });
         }
+      } else {
+        res.status(400).send({
+          success: false,
+          message: "Order not found.",
+        });
       }
     } catch (error) {
+      console.error("Error cancelling item:", error);
       res.status(500).send({
         success: false,
         message: "Internal server error",
       });
     }
   },
+  
 
   doRating: async (req, res) => {
     try {
@@ -354,21 +461,22 @@ export const orders = {
       });
     }
   },
-  getOrderItems: async(req,res)=>{
+  getOrderItems: async (req, res) => {
     try {
-      const { id } = req.query
-      const orderItems = await Orders.findOne({_id:id}) .sort({ _id: -1 })
-      .populate("item.product");
+      const { id } = req.query;
+      const orderItems = await Orders.findOne({ _id: id })
+        .sort({ _id: -1 })
+        .populate("item.product");
       res.status(200).send({
-        success:true,
-        orderItems
-      })
+        success: true,
+        orderItems,
+      });
     } catch (error) {
       console.log(error);
       res.status(500).send({
         success: false,
         message: "Server error.",
-      })
+      });
     }
-  }
+  },
 };
