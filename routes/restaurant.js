@@ -27,7 +27,7 @@ restaurantRouter.patch('/deletproduct',restaurantVerify,deleteProduct)
 restaurantRouter.get('/editproduct',restaurantVerify,getProductData)
 restaurantRouter.patch('/editproduct',restaurantVerify,editProduct)
 restaurantRouter.post('/addcategory',restaurantVerify,addCategory)
-restaurantRouter.get('/getcategory',restaurantVerify,getCategories)
+restaurantRouter.get('/getcategory',getCategories)
 restaurantRouter.patch('/editcategory',restaurantVerify,editCategory)
 restaurantRouter.patch('/deletcategory',restaurantVerify,deleteCategory)
 
