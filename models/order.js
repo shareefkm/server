@@ -4,10 +4,10 @@ const orderSchema = mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Users",
   },
-  restaurantId:[{
+  restaurantId:{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Restarant",
-  }],
+  },
   item: [
     {
       product: {
@@ -33,6 +33,10 @@ const orderSchema = mongoose.Schema({
       employeeId:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Employee",
+      },
+      is_canceled:{
+        type: Boolean,
+        default: false
       }
     },
   ],

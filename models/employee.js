@@ -52,9 +52,13 @@ const EmployeeSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    is_engaged:{
+      type: Boolean,
+      default: false,
+    },
     rating:{
       type:Number
-    }
+    },
   },
   { timestamps: true }
 );

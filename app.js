@@ -12,7 +12,9 @@ import adminRouter from "./routes/admin.js"
 import restaurantRouter from "./routes/restaurant.js"
 import employeeRouter from "./routes/employee.js"
 import { chats } from "./controllers/chatController/chatControll.js";
+import { ordersEmpl } from "./controllers/employeeController/orderControllEmpl.js";
 const { sendMessage } = chats
+const { updateDeliveryStatus } = ordersEmpl
 
 //Dotenv config
 dotenv.config()
@@ -94,15 +96,23 @@ io.on("connection", (socket) => {
 
   socket.on("joinroom",(chat_id,personId)=>{
     socket.join(chat_id)
-    console.log(personId,"connected");
+    // console.log(personId,"connected");
   })
 
   socket.on("send message",(newMessage,chatId)=>{
-    console.log(newMessage);
     io.to(chatId).emit("response",newMessage)
     sendMessage(newMessage)
   })
+
+  socket.on("update-order-status", (data) => {
+    // updateDeliveryStatus(data)
+    // Update the order status in your database, if necessary
+    // Then, broadcast the updated status to all connected clients
+    io.emit("order-status-update", data);
+  });
   
 });
+
+
 
   

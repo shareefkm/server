@@ -1,5 +1,9 @@
+import mongoose from "mongoose";
+
 import Orders from "../../models/order.js";
 import Product from "../../models/product.js";
+import Users from "../../models/user.js";
+
 export const manageOrders = {
   viewOrders: async (req, res) => {
     try {
@@ -33,4 +37,51 @@ export const manageOrders = {
       });
     }
   },
+  
+  dashBorddata: async(req,res)=>{
+    try {
+      const restId = new mongoose.Types.ObjectId(req.restaurant.restaurantId)
+      const totalSale = await Orders.aggregate([
+        {$match : { paymentStatus:'PAID', restaurantId: restId}},
+        {$group : { _id: "$restaurantId", total : {$sum :"$grandTotal"}}}]) 
+        const totalUsers = await Orders.aggregate([
+          {
+            $match: { restaurantId: restId } 
+          },
+          {
+            $group: {
+              _id: "$userId", 
+              total: { $sum: 1 } 
+            }
+          }
+        ]);
+    const totalOrders = await Orders.aggregate([
+      {
+        $match: {
+          is_returned: 0,
+          // is_delivered: true,
+          restaurantId: restId 
+        }
+      },
+      {
+        $group: {
+          _id: "$restaurantId", 
+          total: { $sum: 1 } 
+        }
+      }
+    ]);    
+        res.status(200).send({
+          success:true,
+          totalSale,
+          totalUsers,
+          totalOrders
+        })
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({
+        success:false,
+        message:"server error"
+      })
+    }
+  }
 };

@@ -14,6 +14,7 @@ const instance = new Razorpay({
   key_id: process.env.KEY_ID,
   key_secret: process.env.KEY_SECRET,
 });
+let newOrder;
 
 export const orderControl = {
   applyCoupon: async (req, res) => {
@@ -86,7 +87,6 @@ export const orderControl = {
   order: async (req, res) => {
     try {
       const { payment, addressIndex, cartData } = req.body;
-      // const cart = await Cart.findOne({ _id: cartData._id });
       const user = await Users.findOne({ _id: cartData.user });
       const address = user.Address[addressIndex];
       const cart = await Cart.findOne({ _id: cartData._id })
@@ -97,11 +97,6 @@ export const orderControl = {
         price: item.price,
         variant: item.variant,
       }));
-
-      const restaurantIds = cart.items.map(
-        (item) => item.productId.restaurant_id
-      );
-
 
       // const items = cart.items.map((product) => {
       //   return {
@@ -148,7 +143,7 @@ export const orderControl = {
       if (payment === "COD") {
         await Orders.create({
           userId: user._id,
-          restaurantId: restaurantIds.flat(),
+          restaurantId: cart.restaurantId,
           item: items,
           totalPrice: cart.total,
           discount: cart.discount,
@@ -163,9 +158,9 @@ export const orderControl = {
           message: "order success",
         });
       } else if (payment === "Online") {
-        await Orders.create({
+         newOrder = await new Orders({
           userId: user._id,
-          restaurantId: restaurantIds.flat(),
+          restaurantId: cart.restaurantId,
           item: items,
           totalPrice: cart.total,
           discount: cart.discount,
@@ -194,7 +189,6 @@ export const orderControl = {
           }
         });
       } else if (payment === "Wallet") {
-        console.log(user.Wallet,"----", cart.grandTotal );
         if (user.Wallet >= cart.grandTotal) {
           const grandTotal = parseFloat(cart.grandTotal).toFixed(2);
           await Users.updateOne(
@@ -207,7 +201,7 @@ export const orderControl = {
           );
           await Orders.create({
             userId: user._id,
-            restaurantId: restaurantIds.flat(),
+            restaurantId: cart.restaurantId,
             item: items,
             totalPrice: cart.total,
             discount: cart.discount,
@@ -247,6 +241,7 @@ export const orderControl = {
         .update(sign.toString())
         .digest("hex");
       if (razorpay_signature === expecterSign) {
+        newOrder.save()
         await Cart.deleteOne({ _id: cartData._id });
         res.status(200).send({
           success: true,
@@ -348,24 +343,36 @@ export const orderControl = {
           const updatedTotalPrice = orderItem.totalPrice - canceledProductPrice;
           const updatedDiscount = orderItem.discount - canceledProductDiscount;
           const updatedGrandTotal = updatedTotalPrice - updatedDiscount;
-          const product = await Product.findById(canceledItem.product);
-          const restaurantIdToRemove = product ? product.restaurant_id : null;
           
-          console.log(restaurantIdToRemove);
           // Update order details to cancel the item and remove restaurantId
-          await Orders.updateOne(
-            { _id: orderId },
-            {
-              $pull: { item: { _id: itemId },
-              restaurantId: restaurantIdToRemove },
-              $set: {
-                totalPrice: updatedTotalPrice,
-                discount: updatedDiscount,
-                grandTotal: updatedGrandTotal
+          if(req.baseUrl.startsWith('/restaurant')){
+            await Orders.updateOne(
+              { _id: orderId },
+              {
+                $set: {
+                  "item.$[element].is_canceled": true,
+                  totalPrice: updatedTotalPrice,
+                  discount: updatedDiscount,
+                  grandTotal: updatedGrandTotal,
+                },
               },
-            }
-          );
-  
+              {
+                arrayFilters: [{ "element._id": itemId }], 
+              }
+            );
+          }else{
+            await Orders.updateOne(
+              { _id: orderId },
+              {
+                $pull: { item: { _id: itemId }, },
+                $set: {
+                  totalPrice: updatedTotalPrice,
+                  discount: updatedDiscount,
+                  grandTotal: updatedGrandTotal
+                },
+              }
+            );
+          }
           res.status(200).send({
             success: true,
             message: "Item cancelled",

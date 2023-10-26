@@ -1,14 +1,16 @@
 import Cart from "../../models/cart.js";
 import Product from "../../models/product.js";
-import Users from "../../models/user.js";
 
 export const cart = {
   addToCart: async (req, res) => {
     const { productId, userId, selectedVariant } = req.body;
     try {
-      const product = await Product.findOne({ _id: productId });
+      const product = await Product.findOne({ _id: productId }); 
       const userCart = await Cart.findOne({ user: userId });
       if (userCart) {
+        console.log("pr-res", product.restaurant_id, "crt-rest", userCart.restaurantId);
+        if(product.restaurant_id.equals(userCart.restaurantId)){
+          console.log("tryuioopp[p");
         const proExist = userCart.items.findIndex(
             (item) => item.productId == productId
           );
@@ -65,9 +67,27 @@ export const cart = {
                 message: "product added to cart",
               });
         }
+      }else{
+        await Cart.updateOne(
+          { user: userId },
+          {
+             restaurantId:product.restaurant_id,
+              items: {
+                productId: product._id,
+                price: selectedVariant.offerPrice,
+                variant: selectedVariant.name
+              },
+          }
+        );
+        res.status(200).send({
+          success: true,
+          message: "product added to cart with updated restaurant",
+        });
+      }
       } else {
              await Cart.create({
           user: userId,
+          restaurantId:product.restaurant_id,
           items: [
             {
               productId: product._id,

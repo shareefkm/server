@@ -40,7 +40,8 @@ export const ordersEmpl = {
       });
     }
   },
-  updateDeliveryStatus: async (req, res) => {
+  updateDeliveryStatus: async (req,res) => {
+    // console.log(data);
     try {
       const { prodId, emplId, orderStatus } = req.body;
       let item_orderStatus;
@@ -69,7 +70,7 @@ export const ordersEmpl = {
       if (allItemsDelivered) {
         await Orders.updateOne(
           { "item._id": prodId },
-          { $set: { is_delivered: true } }
+          { $set: { is_delivered: true,paymentStatus:'PAID'} }
         );
       }
       res.status(200).json({

@@ -4,12 +4,15 @@ import { products } from "../controllers/restaurantController/productController.
 import { manageOrders } from "../controllers/restaurantController/ordersManage.js";
 import { categories } from "../controllers/restaurantController/categoryManagement.js";
 import { auth } from "../middlewares/auth.js";
+import { orderControl } from "../controllers/userController/orderController.js";
 //router object
 const restaurantRouter = express.Router()
 const { restaurantRegister, verifyMail, restaurantLogin,forgetPassword,restPassword, getResProfile, editProfile } = restaurant
 const { addProduct, getProduct, deleteProduct, getProductData, editProduct, getRestaurantProduct } = products
 const { addCategory, getCategories, editCategory, deleteCategory } = categories
-const { viewOrders } = manageOrders
+const { viewOrders, dashBorddata } = manageOrders
+const { getOrderItems, cancelOrder } = orderControl
+
 
 const { restaurantVerify } = auth
 //routs
@@ -32,5 +35,8 @@ restaurantRouter.patch('/editcategory',restaurantVerify,editCategory)
 restaurantRouter.patch('/deletcategory',restaurantVerify,deleteCategory)
 
 restaurantRouter.get('/vieworders',restaurantVerify,viewOrders)
+restaurantRouter.get("/getorderitems", restaurantVerify, getOrderItems);
+restaurantRouter.patch("/cancelorder", restaurantVerify, cancelOrder);
+restaurantRouter.get("/dashborddata", restaurantVerify, dashBorddata);
 
 export default restaurantRouter;
