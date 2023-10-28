@@ -1,14 +1,16 @@
 //imports files
 import Employee from "../../models/employee.js";
 import { genPass } from "../../config/bcript.js";
+import { configEmail } from "../../config/emailConfig.js";
 
 const { password } = genPass
+const { sendVerifyMail, sendForgetPassword } = configEmail
 
 export const employee = {
   //Employee Registration
   employeeRegister: async (req, res) => {
     try {
-      const { Name, Email, Mobile, Password, address, id_Proof } = req.body;
+      const { Name, Email, Mobile, Password, address, id_Proof, Place, longitude, latitude } = req.body;
       const existEmployee = await Employee.findOne({ Email });
       if (existEmployee) {
         return res.status(200).send({
@@ -16,7 +18,7 @@ export const employee = {
           message: "Email Already Exist Please Login",
         });
       }else{
-        const employee = await Employee.create({Name, Email, Mobile, Password, address, id_Proof})
+        const employee = await Employee.create({Name, Email, Mobile, Password, address, id_Proof, Place, longitude, latitude})
         if(employee){
           sendVerifyMail(Name, Email, employee._id, "employee/verify");
           const token = await employee.creatJwt();
@@ -47,13 +49,13 @@ export const employee = {
       const { id } = req.params;
       const updateVerifyStatus = await Employee.updateOne(
         { _id: id },
-        { $set: { is_verified: true } }
+        { $set: { Is_verify: true } }
       );
       if (updateVerifyStatus.modifiedCount === 1) {
         res.status(200).send({
           success: true,
           message: "Your email is verified",
-        });
+        }); 
       } else {
         res.status(404).send({
           success: false,
@@ -77,7 +79,6 @@ export const employee = {
             const isMatch = await employee.comparePassword(Password)
             if (isMatch) {
                 if(!employee.Is_verify){
-                  console.log("not vrifyed");
                   res.status(401).send({
                     success: false,
                     message: "Youre account is not verifyed",
@@ -168,7 +169,7 @@ export const employee = {
       const { email } = req.body;
       const employee = await Employee.findOne({ Email: email });
       if (employee) {
-        sendForgetPassword(user.Name, email, employee._id, "employee/resetpassword");
+        sendForgetPassword(employee.Name, email, employee._id, "employee/resetpassword");
         res.status(200).send({
           success: true,
           message: "Check your email",

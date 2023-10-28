@@ -3,7 +3,7 @@ import Restarant from "../../models/restaurant.js"
 export const restaurants = {
     getRestaurants: async(req,res)=>{
         try {
-            const restaurants = await Restarant.find().populate('product')
+            const restaurants = await Restarant.find({Is_blocked:false,Is_verify:true}).populate('product')
         if(restaurants){
             res.status(200).send({
                 success:true,

@@ -34,6 +34,15 @@ const EmployeeSchema = new Schema(
       type: String,
       required: true,
     },
+    Place:{
+      type:String
+    },
+    longitude:{
+      type:Number
+    },
+     latitude:{
+      type:Number
+    },
     address: {
       street: {type:String},
       city: {type:String},

@@ -10,8 +10,8 @@ const restaurantRouter = express.Router()
 const { restaurantRegister, verifyMail, restaurantLogin,forgetPassword,restPassword, getResProfile, editProfile } = restaurant
 const { addProduct, getProduct, deleteProduct, getProductData, editProduct, getRestaurantProduct } = products
 const { addCategory, getCategories, editCategory, deleteCategory } = categories
-const { viewOrders, dashBorddata } = manageOrders
-const { getOrderItems, cancelOrder } = orderControl
+const { viewOrders, updateDeliveryStatus, dashBorddata } = manageOrders
+const { getOrderItems,  cancelOrder } = orderControl
 
 
 const { restaurantVerify } = auth
@@ -36,6 +36,7 @@ restaurantRouter.patch('/deletcategory',restaurantVerify,deleteCategory)
 
 restaurantRouter.get('/vieworders',restaurantVerify,viewOrders)
 restaurantRouter.get("/getorderitems", restaurantVerify, getOrderItems);
+restaurantRouter.patch('/updatedelivery',restaurantVerify, updateDeliveryStatus)
 restaurantRouter.patch("/cancelorder", restaurantVerify, cancelOrder);
 restaurantRouter.get("/dashborddata", restaurantVerify, dashBorddata);
 

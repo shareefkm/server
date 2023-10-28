@@ -29,6 +29,15 @@ const UsersSchema = new Schema({
   Image: { 
     type: String
     },
+    Place:{
+      type:String
+    },
+    longitude:{
+      type:Number
+    },
+     latitude:{
+      type:Number
+    },
   Address: [{
     street: {type:String},
     city: {type:String},

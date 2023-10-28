@@ -10,7 +10,7 @@ export const user = {
   //user registration
   userRegister: async (req, res) => {
     try {
-      const { Name, Email, Mobile, Password } = req.body;
+      const { Name, Email, Mobile, Password, Place, longitude, latitude } = req.body;
       const existingUser = await Users.findOne({ Email });
       if (existingUser) {
         return res.status(200).send({
@@ -18,7 +18,7 @@ export const user = {
           message: "Email Already Exist Please Login",
         });
       } else {
-        const user = await Users.create({ Name, Email, Mobile, Password });
+        const user = await Users.create({ Name, Email, Mobile, Password, Place, longitude, latitude });
         if (user) {
           const token = await user.creatJwt();
           sendVerifyMail(Name, Email, user._id, "verify");

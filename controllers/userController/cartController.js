@@ -8,9 +8,7 @@ export const cart = {
       const product = await Product.findOne({ _id: productId }); 
       const userCart = await Cart.findOne({ user: userId });
       if (userCart) {
-        console.log("pr-res", product.restaurant_id, "crt-rest", userCart.restaurantId);
         if(product.restaurant_id.equals(userCart.restaurantId)){
-          console.log("tryuioopp[p");
         const proExist = userCart.items.findIndex(
             (item) => item.productId == productId
           );

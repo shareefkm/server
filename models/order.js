@@ -30,16 +30,16 @@ const orderSchema = mongoose.Schema({
         type:String,
         default:"Pending"
       },
-      employeeId:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Employee",
-      },
       is_canceled:{
         type: Boolean,
         default: false
       }
     },
   ],
+  employeeId:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Employee",
+  },
   start_date: {
     type: Date,
     default:Date.now()

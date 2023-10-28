@@ -473,7 +473,7 @@ export const orderControl = {
       const { id } = req.query;
       const orderItems = await Orders.findOne({ _id: id })
         .sort({ _id: -1 })
-        .populate("item.product");
+        .populate("item.product").populate("employeeId")
       res.status(200).send({
         success: true,
         orderItems,
