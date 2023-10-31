@@ -24,7 +24,7 @@ const {
   editProfile,
   editPassword,
 } = user;
-const { getRestaurants} =restaurants
+const { getRestaurants, getCattegories, getRestWithCategory} =restaurants
 const { getProductData, searchProduct } = products
 const { addToCart, getcart, changeQuantity, cancelCartItem, cartTotal } = cart;
 const { applyCoupon, order, verifyPayment, getOrders, getOrderItems, cancelOrder, doRating, doReview } = orderControl
@@ -34,6 +34,8 @@ const { verifyToken } = auth;
 
 //routs
 userRouter.get('/getrestaurants', getRestaurants)
+userRouter.get('/getcategories', getCattegories)
+userRouter.get('/getcatrestaurants', getRestWithCategory)
 userRouter.post("/register", userRegister);
 userRouter.get('/verify/:id', verifyMail);
 userRouter.post("/login", userLogin);

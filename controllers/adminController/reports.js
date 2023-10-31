@@ -46,13 +46,12 @@ export const reports = {
   ];
   
   // Execute the aggregation
-  const result = await Restarant.aggregate(pipeline);
+  const totalSaleRestaurant = await Restarant.aggregate(pipeline);
       
       res.status(200).send({
         success:true,
         totalSale,
-        result
-        // totalSaleRestaurant,
+        totalSaleRestaurant,
     })
     } catch (error) {
       console.log(error);

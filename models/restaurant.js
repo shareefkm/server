@@ -38,6 +38,15 @@ const RestarantSchema = new Schema({
    latitude:{
     type:Number
   },
+  openingTime: { 
+    type: String 
+  },
+  closingTime: { 
+    type: String, 
+    },
+  logoUrl:{
+    type: String,
+  },
   Address: {
     street: String,
     city: String,
