@@ -39,5 +39,6 @@ restaurantRouter.get("/getorderitems", restaurantVerify, getOrderItems);
 restaurantRouter.patch('/updatedelivery',restaurantVerify, updateDeliveryStatus)
 restaurantRouter.patch("/cancelorder", restaurantVerify, cancelOrder);
 restaurantRouter.get("/dashborddata", restaurantVerify, dashBorddata);
+// restaurantRouter.get("/getrestrating", getRestRating);
 
 export default restaurantRouter;

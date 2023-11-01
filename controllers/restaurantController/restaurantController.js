@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 //imports files
 import Restarant from "../../models/restaurant.js";
 import { genPass } from "../../config/bcript.js";
@@ -179,10 +181,30 @@ export const restaurant = {
     try {
       const restId = req.query.id
       const restData = await Restarant.findOne({_id:restId})
+      const ratings = await Restarant.aggregate([
+        {
+          $match:{
+            _id:new mongoose.Types.ObjectId(restId),
+          }
+        },
+        {
+          $unwind: '$rating',
+        },
+        {
+          $group: {
+            _id: '$_id',
+            // Name: { $first: '$Name' },
+            totalRating: { $sum: '$rating.rating' },
+            averageRating: { $avg: '$rating.rating' },
+          },
+        },
+      ])
+      
       if(restData){
         res.status(200).send({
           success:true,
           restData,
+          ratings
         })
       }else{
         res.status(404).send({

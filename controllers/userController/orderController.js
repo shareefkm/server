@@ -407,7 +407,6 @@ export const orderControl = {
       });
     }
   },
-  
 
   doRating: async (req, res) => {
     try {
@@ -439,6 +438,7 @@ export const orderControl = {
       });
     }
   },
+
   doReview: async (req, res) => {
     try {
       const { userId, review, restId } = req.body;
@@ -468,6 +468,7 @@ export const orderControl = {
       });
     }
   },
+
   getOrderItems: async (req, res) => {
     try {
       const { id } = req.query;
