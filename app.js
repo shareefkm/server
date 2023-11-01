@@ -44,7 +44,7 @@ const server = app.listen(PORT,()=>{
 const io = new Server(server, {
   pingTimeout: 60000,
   cors: {
-    origin: "http://localhost:4000",
+    origin: "https://www.yummi.website",
     methods: ['GET', 'POST'],
   },
 });
