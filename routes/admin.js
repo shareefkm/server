@@ -4,7 +4,7 @@ import { auth } from "../middlewares/auth.js";
 import { employees } from "../controllers/adminController/employees.js";
 import { restaurants } from "../controllers/adminController/restaurants.js";
 import { coupons } from "../controllers/adminController/couponController.js"
-import { reports } from "../controllers/adminController/Reports.js";
+import { reports } from "../controllers/adminController/reports.js";
 
 const { adminVerify } = auth;
 //router object
