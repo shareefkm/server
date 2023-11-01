@@ -20,7 +20,7 @@ sendVerifyMail: async (name, email, id, path) => {
         from: "Yummi",
         to: email,
         subject: "For verification",
-        html: `<p>Hello ${name}, Please click <a href="http://localhost:4000/${path}/${id}">here</a> to verify your email.</p>`,
+        html: `<p>Hello ${name}, Please click <a href="https://www.yummi.website/${path}/${id}">here</a> to verify your email.</p>`,
       };
       const info = await transporter.sendMail(mailOptions);
     } catch (error) {
@@ -44,7 +44,7 @@ sendVerifyMail: async (name, email, id, path) => {
         from: "Yummi",
         to: email,
         subject: "For Reset Password",
-        html: `<p>Hello ${name}, Please click <a href="http://localhost:4000/${path}/${id}">here</a> to reset your password.</p>`,
+        html: `<p>Hello ${name}, Please click <a href="https://www.yummi.website/${path}/${id}">here</a> to reset your password.</p>`,
       };
       const info = await transporter.sendMail(mailOptions);
       console.log("forget link email sent:", info.response);
